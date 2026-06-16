@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<html>
+<head>
+    <title>PDA Visualizer</title>
+    <link rel="stylesheet" href="Prak.css">
+</head>
+
+<body>
+
+<div id="navbar">PDA String Visualizer</div>
+
+<div id="container">
+
+    <!-- LEFT  -->
+    <div id="leftPanel" class="card">
+        <h3>Pilih Bahasa</h3>
+
+        <select id="language">
+            <option value="anbn">aⁿ bⁿ (balance)</option>
+            <option value="anbn_star">(aⁿ bⁿ)* (multiple pair)</option>
+            <option value="aabn">aa bⁿ (fixed prefix)</option>
+        </select>
+
+        <h3>Input</h3>
+        <input id="inputString" placeholder="Contoh: aaabbb">
+
+        <button onclick="processFSM()">Check String</button>
+        <button onclick="resetAll()" class="reset">Reset</button>
+
+        <h3>Hasil</h3>
+        <div id="resultText">Belum dicek.</div>
+    </div>
+
+    <!-- CENTER  -->
+    <div id="canvasCard" class="card">
+        <h3>PDA Result</h3>
+
+        <div id="canvasWrapper">
+            <div id="resultBox">Menunggu input...</div>
+        </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div id="rightPanel" class="card">
+        <h3>Proses PDA</h3>
+        <div id="history">Belum ada proses.</div>
+    </div>
+
+</div>
+
+<script src="Prak.js"></script>
+
+</body>
+</html>

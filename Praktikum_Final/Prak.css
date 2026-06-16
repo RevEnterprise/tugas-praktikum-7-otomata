@@ -1,0 +1,124 @@
+body {
+    margin: 0;
+    background: #f0f2f5;
+    font-family: "Segoe UI", sans-serif;
+}
+
+#navbar {
+    width: 100%;
+    background: #233142;
+    padding: 16px 25px;
+    font-size: 22px;
+    font-weight: bold;
+    color: white;
+}
+
+#container {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    margin-top: 25px;
+}
+
+.card {
+    background: white;
+    border-radius: 14px;
+    padding: 25px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.15);
+}
+
+#leftPanel {
+    width: 300px;
+    padding: 30px; 
+}
+
+#canvasCard {
+    width: 500px;
+    text-align: center;
+}
+
+#canvasWrapper {
+    height: 300px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#rightPanel {
+    width: 300px;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+input, select {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 10px;
+    border: 1px solid #bbb;
+    margin-bottom: 10px;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    background: #4a90e2;
+    color: white;
+    font-size: 16px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+button:hover {
+    background: #357ABD;
+}
+
+.reset {
+    background: #d32f2f;
+}
+
+.reset:hover {
+    background: #b71c1c;
+}
+
+#resultBox {
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.step {
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+}
+
+
+select {
+    width: 100%;
+    padding: 12px;
+    font-size: 15px;
+    border-radius: 10px;
+    border: 1px solid #bbb;
+    margin-bottom: 15px;
+    background: #f9fafc;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+select:hover {
+    border-color: #4a90e2;
+}
+
+select:focus {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 6px rgba(74,144,226,0.4);
+}
+
+#pdaDiagram {
+    position: absolute;
+    width: 300px;
+    height: 200px;
+}
+
