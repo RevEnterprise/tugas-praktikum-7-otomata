@@ -10,7 +10,7 @@ function processFSM() {
 
     let result = false;
     let reason = "";
-
+    renderImage(lang);
     if (lang === "anbn") {
         ({result, steps, reason} = PDA_anbn(input));
     }
@@ -34,7 +34,7 @@ function processFSM() {
 
 
 function PDA_anbn(input) {
-    let stack = ["Z"];
+    let stack = ["λ"];
     let state = "q0";
     let steps = [];
     let reason = "";
@@ -46,11 +46,11 @@ function PDA_anbn(input) {
             if (state === "q1") {
                 return {result:false, steps, reason:"a setelah b tidak boleh"};
             }
-            stack.push("A");
+            stack.push("a");
         }
         else if (char === 'b') {
             state = "q1";
-            if (stack[stack.length-1] === "A") {
+            if (stack[stack.length-1] === "a") {
                 stack.pop();
             } else {
                 return {result:false, steps, reason:"b terlalu banyak"};
@@ -72,7 +72,7 @@ function PDA_anbn(input) {
 
 
 function PDA_anbn_star(input) {
-    let stack = ["Z"];
+    let stack = ["λ"];
     let steps = [];
     let countA = 0;
     let countB = 0;
@@ -128,6 +128,19 @@ function PDA_aabn(input) {
     return {result:true, steps, reason:""};
 }
 
+function renderImage(lang) {
+    const img = document.getElementById("pdaImage");
+
+    if (lang === "anbn") {
+        img.src = "anbn.png";
+    }
+    else if (lang === "anbn_star") {
+        img.src = "anbn_star.png";
+    }
+    else if (lang === "aabn") {
+        img.src = "aabn.png";
+    }
+}
 
 function resetAll() {
     document.getElementById("inputString").value = "";
