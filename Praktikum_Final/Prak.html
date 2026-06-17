@@ -1,56 +1,89 @@
 <!DOCTYPE html>
-<meta charset="UTF-8">
-<html>
+<html lang="id">
 <head>
-    <title>PDA Visualizer</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDA Visualizer - Editor & Simulator</title>
+
     <link rel="stylesheet" href="Prak.css">
 </head>
-
 <body>
 
-<div id="navbar">PDA String Visualizer</div>
-
-<div id="container">
-
-    <!-- LEFT  -->
-    <div id="leftPanel" class="card">
-        <h3>Pilih Bahasa</h3>
-
-        <select id="language">
-            <option value="anbn">aⁿ bⁿ (balance)</option>
-            <option value="anbn_star">(aⁿ bⁿ)* (multiple pair)</option>
-            <option value="aabn">aa bⁿ (fixed prefix)</option>
-        </select>
-
-        <h3>Input</h3>
-        <input id="inputString" placeholder="Contoh: aaabbb">
-
-        <button onclick="processFSM()">Check String</button>
-        <button onclick="resetAll()" class="reset">Reset</button>
-
-        <h3>Hasil</h3>
-        <div id="resultText">Belum dicek.</div>
+    <!-- NAVBAR -->
+    <div id="navbar">
+        PDA Visualizer
     </div>
 
-    <!-- CENTER  -->
-    <div id="canvasCard" class="card">
-        <h3>PDA Result</h3>
+    <!-- APP -->
+    <div id="app">
 
-        <div id="canvasWrapper">
-            <img id="pdaImage" src="">
-            <div id="resultBox">Menunggu input...</div>
+        <!-- LEFT PANEL -->
+        <div id="leftPanel">
+            <h3>Preset</h3>
+            <select id="presetSelect">
+                <option value="anbn">aⁿ bⁿ (balance)</option>
+                <option value="aabn">aa bⁿ</option>
+                <option value="empty">Kosong</option>
+            </select>
+
+            <h3>Input String</h3>
+            <input id="inputString" placeholder="contoh: aaabbb" value="aaabbb">
+
+            <div class="btn-group">
+                <button class="btn-run" id="runBtn">▶ Jalankan</button>
+                <button class="btn-reset" id="resetBtn">↺ Reset</button>
+            </div>
+
+            <h3>Hasil</h3>
+            <div id="resultText">Belum dicek</div>
+
+            <div style="font-size:12px;color:#6b7a8f;margin-top:4px;">
+                <span>💡 Klik node untuk pilih · seret untuk memindahkannya · klik kanan untuk melihat opsi</span>
+            </div>
+        </div>
+
+        <!-- MIDDLE PANEL -->
+        <div id="middlePanel">
+            <div id="tabBar">
+                <button class="active" data-tab="visual">Visual</button>
+                <button data-tab="json">JSON</button>
+            </div>
+
+            <div id="canvasContainer">
+                <canvas id="pdaCanvas"></canvas>
+            </div>
+
+            <div id="jsonContainer">
+                <textarea id="jsonEditor" spellcheck="false"></textarea>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div id="rightPanel">
+            <h3>Stack</h3>
+            <div id="stackView">
+                <div class="stack-item bottom">λ (bottom)</div>
+            </div>
+
+            <h3>Step</h3>
+            <div id="stepControls">
+                <button id="stepBackBtn" disabled>◀</button>
+                <span class="step-indicator" id="stepIndicator">0 / 0</span>
+                <button id="stepForwardBtn" disabled>▶</button>
+                <button id="stepResetBtn">↺</button>
+            </div>
+
+            <h3>Log</h3>
+            <div id="execLog">Belum ada eksekusi.</div>
         </div>
     </div>
 
-    <!-- RIGHT -->
-    <div id="rightPanel" class="card">
-        <h3>Proses PDA</h3>
-        <div id="history">Belum ada proses.</div>
-    </div>
+    <!-- CONTEXT MENU -->
+    <div id="contextMenu"></div>
 
-</div>
+    <!-- TOAST -->
+    <div id="toast"></div>
 
-<script src="Prak.js"></script>
-
+    <script src="Prak.js"></script>
 </body>
 </html>
