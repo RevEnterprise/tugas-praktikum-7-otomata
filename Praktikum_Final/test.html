@@ -483,7 +483,6 @@
             <h3>Preset</h3>
             <select id="presetSelect">
                 <option value="anbn">aⁿ bⁿ (balance)</option>
-                <option value="anbn_star">(aⁿ bⁿ)*</option>
                 <option value="aabn">aa bⁿ</option>
                 <option value="empty">Kosong</option>
             </select>
@@ -583,90 +582,67 @@
         };
 
         // Default PDA: a^n b^n
-        function createDefaultPDA() {
-            const n = (id) => { nodeIdCounter = Math.max(nodeIdCounter, id + 1); return id; };
+        function createAnbnPDA() {
             const nodes = [
-                { id: n(0), type: 'start', x: 80, y: 200, label: 'Start' },
-                { id: n(1), type: 'read', x: 220, y: 140, label: 'Read a' },
-                { id: n(2), type: 'push', x: 380, y: 140, label: 'Push a', pushSymbol: 'a' },
-                { id: n(3), type: 'read', x: 220, y: 300, label: 'Read b' },
-                { id: n(4), type: 'pop', x: 380, y: 300, label: 'Pop b' },
-                { id: n(5), type: 'accept', x: 560, y: 220, label: 'Accept' },
-                { id: n(6), type: 'reject', x: 560, y: 360, label: 'Reject' },
+                { id: nodeIdCounter++, type: "start", x: 80, y: 220, label: "Start" },
+                { id: nodeIdCounter++, type: "read", x: 220, y: 120, label: "Read" },
+                { id: nodeIdCounter++, type: "push", x: 420, y: 120, label: "Push a", pushSymbol: "a" },
+                { id: nodeIdCounter++, type: "read", x: 220, y: 320, label: "Read" },
+                { id: nodeIdCounter++, type: "pop", x: 420, y: 320, label: "Pop" },
+                { id: nodeIdCounter++, type: "accept", x: 620, y: 520, label: "Accept" },
+                { id: nodeIdCounter++, type: "pop", x: 220, y: 460, label: "Pop" },
+                { id: nodeIdCounter++, type: "reject", x: 291, y: 611, label: "Reject" },
+                { id: nodeIdCounter++, type: "read", x: 406, y: 481.5, label: "Read" }
             ];
-            const edges = [
-                { id: edgeIdCounter++, from: 0, to: 1, symbol: 'λ' },
-                { id: edgeIdCounter++, from: 1, to: 2, symbol: 'a' },
-                { id: edgeIdCounter++, from: 2, to: 1, symbol: 'λ' },
-                { id: edgeIdCounter++, from: 2, to: 3, symbol: 'λ' },
-                { id: edgeIdCounter++, from: 3, to: 4, symbol: 'b' },
-                { id: edgeIdCounter++, from: 4, to: 3, symbol: 'b' },
-                { id: edgeIdCounter++, from: 4, to: 5, symbol: 'λ' },
-                { id: edgeIdCounter++, from: 3, to: 6, symbol: 'λ' },
-            ];
-            return { nodes, edges };
-        }
 
-        // PDA (a^n b^n)*
-        function createStarPDA() {
-            const n = (id) => { nodeIdCounter = Math.max(nodeIdCounter, id + 1); return id; };
-            const nodes = [
-                { id: n(0), type: 'start', x: 80, y: 200, label: 'Start' },
-                { id: n(1), type: 'read', x: 220, y: 120, label: 'Read a' },
-                { id: n(2), type: 'push', x: 380, y: 120, label: 'Push a', pushSymbol: 'a' },
-                { id: n(3), type: 'read', x: 220, y: 300, label: 'Read b' },
-                { id: n(4), type: 'pop', x: 380, y: 300, label: 'Pop b' },
-                { id: n(5), type: 'accept', x: 560, y: 210, label: 'Accept' },
-                { id: n(6), type: 'reject', x: 560, y: 360, label: 'Reject' },
-                { id: n(7), type: 'read', x: 220, y: 460, label: 'Read sep' },
-            ];
             const edges = [
-                { id: edgeIdCounter++, from: 0, to: 1, symbol: 'λ' },
-                { id: edgeIdCounter++, from: 1, to: 2, symbol: 'a' },
-                { id: edgeIdCounter++, from: 2, to: 1, symbol: 'λ' },
-                { id: edgeIdCounter++, from: 2, to: 3, symbol: 'λ' },
-                { id: edgeIdCounter++, from: 3, to: 4, symbol: 'b' },
-                { id: edgeIdCounter++, from: 4, to: 3, symbol: 'b' },
-                { id: edgeIdCounter++, from: 4, to: 5, symbol: 'λ' },
-                { id: edgeIdCounter++, from: 5, to: 7, symbol: 'λ' },
-                { id: edgeIdCounter++, from: 7, to: 1, symbol: 'λ' },
-                { id: edgeIdCounter++, from: 3, to: 6, symbol: 'λ' },
+                { id: edgeIdCounter++, from: 0, to: 1, symbol: "λ" },
+                { id: edgeIdCounter++, from: 1, to: 2, symbol: "a" },
+                { id: edgeIdCounter++, from: 2, to: 1, symbol: "λ" },
+                { id: edgeIdCounter++, from: 1, to: 3, symbol: "λ" },
+                { id: edgeIdCounter++, from: 3, to: 4, symbol: "b" },
+                { id: edgeIdCounter++, from: 4, to: 3, symbol: "a" },
+                { id: edgeIdCounter++, from: 3, to: 6, symbol: "λ" },
+                { id: edgeIdCounter++, from: 6, to: 7, symbol: "a" },
+                { id: edgeIdCounter++, from: 6, to: 8, symbol: "λ" },
+                { id: edgeIdCounter++, from: 8, to: 7, symbol: "a" },
+                { id: edgeIdCounter++, from: 8, to: 7, symbol: "b" },
+                { id: edgeIdCounter++, from: 8, to: 5, symbol: "λ" }
             ];
             return { nodes, edges };
         }
 
         // PDA: aa b^n
         function createAabnPDA() {
-            const n = (id) => { nodeIdCounter = Math.max(nodeIdCounter, id + 1); return id; };
             const nodes = [
-                { id: n(0), type: 'start', x: 80, y: 200, label: 'Start' },
-                { id: n(1), type: 'read', x: 220, y: 140, label: 'Read a' },
-                { id: n(2), type: 'read', x: 380, y: 140, label: 'Read a' },
-                { id: n(3), type: 'read', x: 220, y: 320, label: 'Read b' },
-                { id: n(4), type: 'pop', x: 380, y: 320, label: 'Pop b' },
-                { id: n(5), type: 'accept', x: 560, y: 230, label: 'Accept' },
-                { id: n(6), type: 'reject', x: 560, y: 370, label: 'Reject' },
+                { id: nodeIdCounter++, type: "start", x: 80, y: 200, label: "Start" },
+                { id: nodeIdCounter++, type: "read", x: 220, y: 140, label: "Read" },
+                { id: nodeIdCounter++, type: "read", x: 380, y: 140, label: "Read" },
+                { id: nodeIdCounter++, type: "read", x: 220, y: 320, label: "Read" },
+                { id: nodeIdCounter++, type: "accept", x: 560, y: 230, label: "Accept" },
+                { id: nodeIdCounter++, type: "reject", x: 560, y: 370, label: "Reject" },
+                { id: nodeIdCounter++, type: "push", x: 256, y: 515.5, label: "Push b", pushSymbol: "b" },
+                { id: nodeIdCounter++, type: "pop", x: 378, y: 271.5, label: "Pop" }
             ];
             const edges = [
-                { id: edgeIdCounter++, from: 0, to: 1, symbol: 'λ' },
-                { id: edgeIdCounter++, from: 1, to: 2, symbol: 'a' },
-                { id: edgeIdCounter++, from: 2, to: 3, symbol: 'λ' },
-                { id: edgeIdCounter++, from: 3, to: 4, symbol: 'b' },
-                { id: edgeIdCounter++, from: 4, to: 3, symbol: 'b' },
-                { id: edgeIdCounter++, from: 4, to: 5, symbol: 'λ' },
-                { id: edgeIdCounter++, from: 3, to: 6, symbol: 'λ' },
+                { id: edgeIdCounter++, from: 0, to: 1, symbol: "λ" },
+                { id: edgeIdCounter++, from: 1, to: 2, symbol: "a" },
+                { id: edgeIdCounter++, from: 2, to: 3, symbol: "a" },
+                { id: edgeIdCounter++, from: 3, to: 5, symbol: "a" },
+                { id: edgeIdCounter++, from: 3, to: 6, symbol: "b" },
+                { id: edgeIdCounter++, from: 6, to: 3, symbol: "λ" },
+                { id: edgeIdCounter++, from: 7, to: 4, symbol: "b" },
+                { id: edgeIdCounter++, from: 3, to: 7, symbol: "λ" }
             ];
             return { nodes, edges };
         }
 
         function createEmptyPDA() {
-            const n = (id) => { nodeIdCounter = Math.max(nodeIdCounter, id + 1); return id; };
             const nodes = [
-                { id: n(0), type: 'start', x: 80, y: 200, label: 'Start' },
-                { id: n(1), type: 'accept', x: 300, y: 200, label: 'Accept' },
+                { id: nodeIdCounter++, type: 'start', x: 80, y: 200, label: 'Start' },
+                { id: nodeIdCounter++, type: 'accept', x: 300, y: 200, label: 'Accept' },
             ];
             const edges = [
-                { id: edgeIdCounter++, from: 0, to: 1, symbol: 'λ' },
             ];
             return { nodes, edges };
         }
@@ -2011,10 +1987,7 @@
             edgeIdCounter = 0;
             switch (name) {
                 case 'anbn':
-                    data = createDefaultPDA();
-                    break;
-                case 'anbn_star':
-                    data = createStarPDA();
+                    data = createAnbnPDA();
                     break;
                 case 'aabn':
                     data = createAabnPDA();
