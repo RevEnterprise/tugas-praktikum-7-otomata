@@ -1288,7 +1288,7 @@ function updateUI() {
             const cls = i === execStepIndex ? 'log-entry current' : 'log-entry';
             const op = s.operation || '—';
             const desc = s.description || '';
-            return `<div class="${cls}">[${i + 1}] ${op.toUpperCase()} ${desc}</div>`;
+            return `<div class="${cls}" onclick="goToStep(${i})" style="cursor: pointer;"> [${i + 1}] ${op.toUpperCase()} ${desc} </div>`;
         }).join('');
         if (execStepIndex >= 0) {
             const items = log.querySelectorAll('.log-entry');
@@ -1343,6 +1343,26 @@ function stepForward() {
 function stepBack() {
     if (execStepIndex > 0) {
         execStepIndex--;
+        const step = execSteps[execStepIndex];
+        if (step) highlightNode(step.nodeId);
+        updateUI();
+        draw();
+    }
+}
+
+function goToFirstStep() {
+    if (execSteps.length > 0) {
+        execStepIndex = 0;
+        const step = execSteps[execStepIndex];
+        if (step) highlightNode(step.nodeId);
+        updateUI();
+        draw();
+    }
+}
+
+function goToStep(index) {
+    if (index >= 0 && index < execSteps.length) {
+        execStepIndex = index;
         const step = execSteps[execStepIndex];
         if (step) highlightNode(step.nodeId);
         updateUI();
@@ -1449,7 +1469,7 @@ function init() {
 
     document.getElementById('stepForwardBtn').addEventListener('click', stepForward);
     document.getElementById('stepBackBtn').addEventListener('click', stepBack);
-    document.getElementById('stepResetBtn').addEventListener('click', resetExecution);
+    document.getElementById('stepResetBtn').addEventListener('click', goToFirstStep);
 
     document.getElementById('presetSelect').addEventListener('change', (e) => {
         loadPreset(e.target.value);
