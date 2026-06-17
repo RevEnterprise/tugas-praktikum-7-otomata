@@ -7,7 +7,7 @@
 
 ## Website Link
 [Website Link](https://reventerprise.github.io/tugas-praktikum-7-otomata/)
-
+[Youtube Video](https://youtu.be/GuqEyptE2Zc)
 
 ## Cara Penggunaan Program
 - Pilih bahasa (a^n b^n atau aab^2)
