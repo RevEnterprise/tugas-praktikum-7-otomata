@@ -855,7 +855,7 @@ function showContextMenu(clientX, clientY, nodeId, edgeId) {
 
         const itemLabel = document.createElement('button');
         itemLabel.className = 'menu-item';
-        itemLabel.textContent = '✏️ Edit label';
+        itemLabel.textContent = 'Edit label';
         itemLabel.onclick = () => {
             const newLabel = prompt('Label node:', node.label || '');
             if (newLabel !== null) {
@@ -871,7 +871,7 @@ function showContextMenu(clientX, clientY, nodeId, edgeId) {
         if (node.type === 'push') {
             const itemPush = document.createElement('button');
             itemPush.className = 'menu-item';
-            itemPush.textContent = '📦 Edit push symbol (now: ' + (node.pushSymbol || 'λ') + ')';
+            itemPush.textContent = 'Edit push symbol (now: ' + (node.pushSymbol || 'λ') + ')';
             itemPush.onclick = () => {
                 const val = prompt('Symbol yang di-push:', node.pushSymbol || 'a');
                 if (val !== null) {
@@ -887,7 +887,7 @@ function showContextMenu(clientX, clientY, nodeId, edgeId) {
 
         const itemEdge = document.createElement('button');
         itemEdge.className = 'menu-item';
-        itemEdge.textContent = '🔗 Tambah edge dari sini';
+        itemEdge.textContent = 'Tambah edge dari sini';
         itemEdge.onclick = () => {
             edgeSourceId = nodeId;
             selectedNodeId = nodeId;
@@ -900,7 +900,7 @@ function showContextMenu(clientX, clientY, nodeId, edgeId) {
 
         const itemDel = document.createElement('button');
         itemDel.className = 'menu-item danger';
-        itemDel.textContent = '🗑️ Hapus node';
+        itemDel.textContent = 'Hapus node';
         itemDel.onclick = () => {
             if (confirm('Hapus node "' + (node.label || node.type) + '" dan edge terkait?')) {
                 pda.nodes = pda.nodes.filter(n => n.id !== nodeId);
@@ -921,7 +921,7 @@ function showContextMenu(clientX, clientY, nodeId, edgeId) {
 
         const itemSym = document.createElement('button');
         itemSym.className = 'menu-item';
-        itemSym.textContent = '✏️ Edit symbol (now: ' + (edge.symbol || 'λ') + ')';
+        itemSym.textContent = 'Edit symbol (now: ' + (edge.symbol || 'λ') + ')';
         itemSym.onclick = () => {
             const val = prompt('Symbol edge:', edge.symbol || 'λ');
             if (val !== null) {
@@ -936,7 +936,7 @@ function showContextMenu(clientX, clientY, nodeId, edgeId) {
 
         const itemDel = document.createElement('button');
         itemDel.className = 'menu-item danger';
-        itemDel.textContent = '🗑️ Hapus edge';
+        itemDel.textContent = 'Hapus edge';
         itemDel.onclick = () => {
             pda.edges = pda.edges.filter(e => e.id !== edgeId);
             if (selectedEdgeId === edgeId) selectedEdgeId = null;
@@ -981,7 +981,7 @@ function showContextMenu(clientX, clientY, nodeId, edgeId) {
 
         const itemClear = document.createElement('button');
         itemClear.className = 'menu-item danger';
-        itemClear.textContent = '🧹 Hapus semua';
+        itemClear.textContent = 'Hapus semua';
         itemClear.onclick = () => {
             if (confirm('Hapus semua node dan edge?')) {
                 pda.nodes = [];
