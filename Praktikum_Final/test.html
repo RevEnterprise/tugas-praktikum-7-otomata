@@ -1,0 +1,2223 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDA Visualizer - Editor & Simulator</title>
+    <style>
+        /* ---------- RESET & BASE ---------- */
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            margin: 0;
+            background: #eef1f5;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        /* ---------- NAVBAR ---------- */
+        #navbar {
+            background: #1a2639;
+            color: white;
+            padding: 12px 24px;
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+        #navbar span {
+            opacity: 0.7;
+            font-weight: 400;
+            font-size: 14px;
+            margin-left: auto;
+        }
+        /* ---------- MAIN LAYOUT ---------- */
+        #app {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+            gap: 0;
+        }
+        /* ---------- LEFT PANEL ---------- */
+        #leftPanel {
+            width: 260px;
+            background: white;
+            padding: 18px 16px;
+            border-right: 1px solid #d0d7de;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+            flex-shrink: 0;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
+        }
+        #leftPanel h3 {
+            margin: 0 0 4px 0;
+            font-size: 14px;
+            color: #2c3e50;
+            letter-spacing: 0.3px;
+        }
+        #leftPanel select,
+        #leftPanel input {
+            width: 100%;
+            padding: 8px 10px;
+            font-size: 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            background: #f8fafc;
+            transition: 0.2s;
+        }
+        #leftPanel select:focus,
+        #leftPanel input:focus {
+            outline: none;
+            border-color: #4a90e2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
+        }
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .btn-group button {
+            flex: 1;
+            min-width: 60px;
+            padding: 8px 0;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .btn-run {
+            background: #4a90e2;
+            color: white;
+        }
+        .btn-run:hover {
+            background: #357abd;
+        }
+        .btn-run:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-reset {
+            background: #e74c3c;
+            color: white;
+        }
+        .btn-reset:hover {
+            background: #c0392b;
+        }
+        .btn-step {
+            background: #2ecc71;
+            color: white;
+            flex: 0 0 auto;
+            padding: 8px 16px;
+        }
+        .btn-step:hover {
+            background: #27ae60;
+        }
+        .btn-step:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        #resultText {
+            font-size: 16px;
+            font-weight: 600;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: #f1f3f5;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+        }
+        #resultText.accept {
+            background: #d4edda;
+            color: #155724;
+        }
+        #resultText.reject {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        /* ---------- MIDDLE PANEL ---------- */
+        #middlePanel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f8fafc;
+            min-width: 0;
+        }
+        #tabBar {
+            display: flex;
+            background: white;
+            border-bottom: 1px solid #d0d7de;
+            padding: 0 16px;
+            flex-shrink: 0;
+        }
+        #tabBar button {
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6b7a8f;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: 0.2s;
+        }
+        #tabBar button:hover {
+            color: #1a2639;
+        }
+        #tabBar button.active {
+            color: #1a2639;
+            border-bottom-color: #4a90e2;
+        }
+        #canvasContainer {
+            flex: 1;
+            position: relative;
+            background: #ffffff;
+            overflow: hidden;
+            min-height: 0;
+        }
+        #canvasContainer canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            cursor: default;
+        }
+        #jsonContainer {
+            display: none;
+            flex: 1;
+            padding: 16px;
+            background: #1e1e2e;
+            overflow: auto;
+        }
+        #jsonContainer textarea {
+            width: 100%;
+            height: 100%;
+            background: #1e1e2e;
+            color: #cdd6f4;
+            border: none;
+            font-family: 'Cascadia Code', 'Fira Code', monospace;
+            font-size: 13px;
+            resize: none;
+            outline: none;
+            padding: 8px;
+            line-height: 1.6;
+        }
+        /* ---------- RIGHT PANEL ---------- */
+        #rightPanel {
+            width: 280px;
+            background: white;
+            border-left: 1px solid #d0d7de;
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+            flex-shrink: 0;
+            box-shadow: -2px 0 8px rgba(0, 0, 0, 0.04);
+        }
+        #rightPanel h3 {
+            margin: 0 0 2px 0;
+            font-size: 14px;
+            color: #2c3e50;
+        }
+        #stackView {
+            background: #1e293b;
+            border-radius: 10px;
+            padding: 10px 12px;
+            min-height: 120px;
+            max-height: 180px;
+            overflow-y: auto;
+            font-family: 'Cascadia Code', 'Fira Code', monospace;
+            font-size: 15px;
+            color: #e2e8f0;
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: flex-start;
+            gap: 2px;
+        }
+        #stackView .stack-item {
+            background: #334155;
+            padding: 2px 12px;
+            border-radius: 4px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+        #stackView .stack-item.bottom {
+            opacity: 0.5;
+            font-size: 13px;
+        }
+        #stackView .stack-item.pop {
+            color: #f87171;
+        }
+        #stackView .stack-item.push {
+            color: #6ee7b7;
+        }
+        #stepControls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        #stepControls button {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            background: #e2e8f0;
+            color: #1e293b;
+            transition: 0.15s;
+        }
+        #stepControls button:hover:not(:disabled) {
+            background: #cbd5e1;
+        }
+        #stepControls button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        #stepControls .step-indicator {
+            font-size: 14px;
+            font-weight: 500;
+            color: #334155;
+            min-width: 60px;
+            text-align: center;
+        }
+        #execLog {
+            flex: 1;
+            min-height: 60px;
+            max-height: 160px;
+            overflow-y: auto;
+            background: #f1f4f9;
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-family: 'Cascadia Code', 'Fira Code', monospace;
+            font-size: 12px;
+            line-height: 1.8;
+            color: #1e293b;
+        }
+        #execLog .log-entry {
+            border-bottom: 1px solid #e2e8f0;
+            padding: 2px 0;
+        }
+        #execLog .log-entry.current {
+            background: #dbeafe;
+            border-radius: 4px;
+            padding: 2px 6px;
+        }
+        /* ---------- CONTEXT MENU ---------- */
+        #contextMenu {
+            position: fixed;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+            padding: 6px 0;
+            min-width: 180px;
+            z-index: 1000;
+            display: none;
+            border: 1px solid #e2e8f0;
+        }
+        #contextMenu .menu-item {
+            padding: 8px 18px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #1e293b;
+            transition: 0.1s;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            font-family: inherit;
+        }
+        #contextMenu .menu-item:hover {
+            background: #f1f4f9;
+        }
+        #contextMenu .menu-item.danger {
+            color: #dc2626;
+        }
+        #contextMenu .menu-item.danger:hover {
+            background: #fef2f2;
+        }
+        #contextMenu .menu-divider {
+            height: 1px;
+            background: #e2e8f0;
+            margin: 4px 12px;
+        }
+        #contextMenu .submenu {
+            position: relative;
+        }
+        #contextMenu .submenu-content {
+            display: none;
+            position: absolute;
+            left: 100%;
+            top: -6px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 6px 0;
+            min-width: 140px;
+            border: 1px solid #e2e8f0;
+        }
+        #contextMenu .submenu:hover .submenu-content {
+            display: block;
+        }
+        /* ---------- SCROLLBAR ---------- */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f4f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        /* ---------- RESPONSIVE ---------- */
+        @media (max-width: 1100px) {
+            #leftPanel {
+                width: 200px;
+                padding: 12px;
+            }
+            #rightPanel {
+                width: 220px;
+                padding: 12px;
+            }
+        }
+        @media (max-width: 800px) {
+            #app {
+                flex-direction: column;
+            }
+            #leftPanel,
+            #rightPanel {
+                width: 100%;
+                border: none;
+                border-bottom: 1px solid #d0d7de;
+                max-height: 200px;
+            }
+            #rightPanel {
+                border-top: 1px solid #d0d7de;
+                max-height: 250px;
+            }
+            #middlePanel {
+                flex: 1;
+                min-height: 300px;
+            }
+        }
+        /* ---------- TOAST ---------- */
+        #toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: white;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 2000;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+        }
+        #toast.show {
+            opacity: 1;
+        }
+        /* node type badges in menu */
+        .badge {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            margin-right: 6px;
+        }
+        .badge-start {
+            background: #4a90e2;
+        }
+        .badge-read {
+            background: #f59e0b;
+        }
+        .badge-push {
+            background: #8b5cf6;
+        }
+        .badge-pop {
+            background: #ef4444;
+        }
+        .badge-accept {
+            background: #22c55e;
+        }
+        .badge-reject {
+            background: #6b7280;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <div id="navbar">
+        PDA Visualizer
+    </div>
+
+    <!-- APP -->
+    <div id="app">
+
+        <!-- LEFT PANEL -->
+        <div id="leftPanel">
+            <h3>Preset</h3>
+            <select id="presetSelect">
+                <option value="anbn">aⁿ bⁿ (balance)</option>
+                <option value="anbn_star">(aⁿ bⁿ)*</option>
+                <option value="aabn">aa bⁿ</option>
+                <option value="empty">Kosong</option>
+            </select>
+
+            <h3>Input String</h3>
+            <input id="inputString" placeholder="contoh: aaabbb" value="aaabbb">
+
+            <div class="btn-group">
+                <button class="btn-run" id="runBtn">▶ Jalankan</button>
+                <button class="btn-reset" id="resetBtn">↺ Reset</button>
+            </div>
+
+            <h3>Hasil</h3>
+            <div id="resultText">Belum dicek</div>
+
+            <div style="font-size:12px;color:#6b7a8f;margin-top:4px;">
+                <span>💡 Klik node untuk pilih · seret untuk memindahkannya · klik kanan untuk melihat opsi</span>
+            </div>
+        </div>
+
+        <!-- MIDDLE PANEL -->
+        <div id="middlePanel">
+            <div id="tabBar">
+                <button class="active" data-tab="visual">Visual</button>
+                <button data-tab="json">JSON</button>
+            </div>
+
+            <div id="canvasContainer">
+                <canvas id="pdaCanvas"></canvas>
+            </div>
+
+            <div id="jsonContainer">
+                <textarea id="jsonEditor" spellcheck="false"></textarea>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div id="rightPanel">
+            <h3>Stack</h3>
+            <div id="stackView">
+                <div class="stack-item bottom">λ (bottom)</div>
+            </div>
+
+            <h3>Step</h3>
+            <div id="stepControls">
+                <button id="stepBackBtn" disabled>◀</button>
+                <span class="step-indicator" id="stepIndicator">0 / 0</span>
+                <button id="stepForwardBtn" disabled>▶</button>
+                <button id="stepResetBtn" style="flex:0 0 auto;padding:6px 12px;background:#e2e8f0;">↺</button>
+            </div>
+
+            <h3>Log</h3>
+            <div id="execLog">Belum ada eksekusi.</div>
+        </div>
+    </div>
+
+    <!-- CONTEXT MENU -->
+    <div id="contextMenu">
+        <!-- filled dynamically -->
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast"></div>
+
+    <!-- ========== JAVASCRIPT ========== -->
+    <script>
+        // ─────────────────────────────────────────────────────────────
+        //  DATA MODEL
+        // ─────────────────────────────────────────────────────────────
+        let nodeIdCounter = 0;
+        let edgeIdCounter = 0;
+
+        const NODE_TYPES = ['start', 'read', 'push', 'pop', 'accept', 'reject'];
+        const NODE_LABELS = {
+            start: 'Start',
+            read: 'Read',
+            push: 'Push',
+            pop: 'Pop',
+            accept: 'Accept',
+            reject: 'Reject'
+        };
+        const NODE_COLORS = {
+            start: '#4a90e2',
+            read: '#f59e0b',
+            push: '#8b5cf6',
+            pop: '#ef4444',
+            accept: '#22c55e',
+            reject: '#6b7280'
+        };
+        const NODE_SHAPES = {
+            start: 'roundrect',
+            read: 'diamond',
+            push: 'rect',
+            pop: 'diamond',
+            accept: 'roundrect',
+            reject: 'roundrect'
+        };
+
+        // Default PDA: a^n b^n
+        function createDefaultPDA() {
+            const n = (id) => { nodeIdCounter = Math.max(nodeIdCounter, id + 1); return id; };
+            const nodes = [
+                { id: n(0), type: 'start', x: 80, y: 200, label: 'Start' },
+                { id: n(1), type: 'read', x: 220, y: 140, label: 'Read a' },
+                { id: n(2), type: 'push', x: 380, y: 140, label: 'Push a', pushSymbol: 'a' },
+                { id: n(3), type: 'read', x: 220, y: 300, label: 'Read b' },
+                { id: n(4), type: 'pop', x: 380, y: 300, label: 'Pop b' },
+                { id: n(5), type: 'accept', x: 560, y: 220, label: 'Accept' },
+                { id: n(6), type: 'reject', x: 560, y: 360, label: 'Reject' },
+            ];
+            const edges = [
+                { id: edgeIdCounter++, from: 0, to: 1, symbol: 'λ' },
+                { id: edgeIdCounter++, from: 1, to: 2, symbol: 'a' },
+                { id: edgeIdCounter++, from: 2, to: 1, symbol: 'λ' },
+                { id: edgeIdCounter++, from: 2, to: 3, symbol: 'λ' },
+                { id: edgeIdCounter++, from: 3, to: 4, symbol: 'b' },
+                { id: edgeIdCounter++, from: 4, to: 3, symbol: 'b' },
+                { id: edgeIdCounter++, from: 4, to: 5, symbol: 'λ' },
+                { id: edgeIdCounter++, from: 3, to: 6, symbol: 'λ' },
+            ];
+            return { nodes, edges };
+        }
+
+        // PDA (a^n b^n)*
+        function createStarPDA() {
+            const n = (id) => { nodeIdCounter = Math.max(nodeIdCounter, id + 1); return id; };
+            const nodes = [
+                { id: n(0), type: 'start', x: 80, y: 200, label: 'Start' },
+                { id: n(1), type: 'read', x: 220, y: 120, label: 'Read a' },
+                { id: n(2), type: 'push', x: 380, y: 120, label: 'Push a', pushSymbol: 'a' },
+                { id: n(3), type: 'read', x: 220, y: 300, label: 'Read b' },
+                { id: n(4), type: 'pop', x: 380, y: 300, label: 'Pop b' },
+                { id: n(5), type: 'accept', x: 560, y: 210, label: 'Accept' },
+                { id: n(6), type: 'reject', x: 560, y: 360, label: 'Reject' },
+                { id: n(7), type: 'read', x: 220, y: 460, label: 'Read sep' },
+            ];
+            const edges = [
+                { id: edgeIdCounter++, from: 0, to: 1, symbol: 'λ' },
+                { id: edgeIdCounter++, from: 1, to: 2, symbol: 'a' },
+                { id: edgeIdCounter++, from: 2, to: 1, symbol: 'λ' },
+                { id: edgeIdCounter++, from: 2, to: 3, symbol: 'λ' },
+                { id: edgeIdCounter++, from: 3, to: 4, symbol: 'b' },
+                { id: edgeIdCounter++, from: 4, to: 3, symbol: 'b' },
+                { id: edgeIdCounter++, from: 4, to: 5, symbol: 'λ' },
+                { id: edgeIdCounter++, from: 5, to: 7, symbol: 'λ' },
+                { id: edgeIdCounter++, from: 7, to: 1, symbol: 'λ' },
+                { id: edgeIdCounter++, from: 3, to: 6, symbol: 'λ' },
+            ];
+            return { nodes, edges };
+        }
+
+        // PDA: aa b^n
+        function createAabnPDA() {
+            const n = (id) => { nodeIdCounter = Math.max(nodeIdCounter, id + 1); return id; };
+            const nodes = [
+                { id: n(0), type: 'start', x: 80, y: 200, label: 'Start' },
+                { id: n(1), type: 'read', x: 220, y: 140, label: 'Read a' },
+                { id: n(2), type: 'read', x: 380, y: 140, label: 'Read a' },
+                { id: n(3), type: 'read', x: 220, y: 320, label: 'Read b' },
+                { id: n(4), type: 'pop', x: 380, y: 320, label: 'Pop b' },
+                { id: n(5), type: 'accept', x: 560, y: 230, label: 'Accept' },
+                { id: n(6), type: 'reject', x: 560, y: 370, label: 'Reject' },
+            ];
+            const edges = [
+                { id: edgeIdCounter++, from: 0, to: 1, symbol: 'λ' },
+                { id: edgeIdCounter++, from: 1, to: 2, symbol: 'a' },
+                { id: edgeIdCounter++, from: 2, to: 3, symbol: 'λ' },
+                { id: edgeIdCounter++, from: 3, to: 4, symbol: 'b' },
+                { id: edgeIdCounter++, from: 4, to: 3, symbol: 'b' },
+                { id: edgeIdCounter++, from: 4, to: 5, symbol: 'λ' },
+                { id: edgeIdCounter++, from: 3, to: 6, symbol: 'λ' },
+            ];
+            return { nodes, edges };
+        }
+
+        function createEmptyPDA() {
+            const n = (id) => { nodeIdCounter = Math.max(nodeIdCounter, id + 1); return id; };
+            const nodes = [
+                { id: n(0), type: 'start', x: 80, y: 200, label: 'Start' },
+                { id: n(1), type: 'accept', x: 300, y: 200, label: 'Accept' },
+            ];
+            const edges = [
+                { id: edgeIdCounter++, from: 0, to: 1, symbol: 'λ' },
+            ];
+            return { nodes, edges };
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        //  STATE
+        // ─────────────────────────────────────────────────────────────
+        let pda = { nodes: [], edges: [] };
+        let selectedNodeId = null;
+        let selectedEdgeId = null;
+        let dragNodeId = null;
+        let dragOffsetX = 0,
+            dragOffsetY = 0;
+        let hoveredNodeId = null;
+        let hoveredEdgeId = null;
+
+        // Execution state
+        let execSteps = [];
+        let execStepIndex = -1;
+        let execResult = null; // 'accept' | 'reject' | null
+        let isRunning = false;
+
+        // Edge creation mode
+        let edgeSourceId = null;
+
+        // Canvas refs
+        const canvas = document.getElementById('pdaCanvas');
+        const ctx = canvas.getContext('2d');
+        let canvasW = 0,
+            canvasH = 0;
+
+        // ─────────────────────────────────────────────────────────────
+        //  HELPERS
+        // ─────────────────────────────────────────────────────────────
+        function getNode(id) { return pda.nodes.find(n => n.id === id); }
+
+        function getEdge(id) { return pda.edges.find(e => e.id === id); }
+
+        function getNodeShape(type) { return NODE_SHAPES[type] || 'rect'; }
+
+        function getNodeColor(type) { return NODE_COLORS[type] || '#888'; }
+
+        function getNodeLabel(type) { return NODE_LABELS[type] || type; }
+
+        function nodeSize(type) {
+            const s = getNodeShape(type);
+            if (s === 'diamond') return { w: 56, h: 56 };
+            return { w: 72, h: 44 };
+        }
+
+        function toast(msg) {
+            const el = document.getElementById('toast');
+            el.textContent = msg;
+            el.classList.add('show');
+            clearTimeout(el._hide);
+            el._hide = setTimeout(() => el.classList.remove('show'), 2200);
+        }
+
+        function getParallelEdgeInfo(edge) {
+
+            const sameDirection = pda.edges.filter(
+                e =>
+                    e.from === edge.from &&
+                        e.to === edge.to
+            );
+
+            const reverseDirection = pda.edges.filter(
+                e =>
+                    e.from === edge.to &&
+                        e.to === edge.from
+            );
+
+            return {
+                sameIndex: sameDirection.findIndex(
+                    e => e.id === edge.id
+                ),
+                sameCount: sameDirection.length,
+                hasReverse: reverseDirection.length > 0
+            };
+        }
+
+        function getEdgeOffset(edge) {
+
+            const info = getParallelEdgeInfo(edge);
+
+            let offset = 0;
+
+            // spread same-direction edges
+            if (info.sameCount > 1) {
+                offset += (
+                    info.sameIndex -
+                        (info.sameCount - 1) / 2
+                ) * 35;
+            }
+
+            // separate opposite directions
+            if (info.hasReverse) {
+                offset += 80;
+            }
+
+            return offset;
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        //  RENDER
+        // ─────────────────────────────────────────────────────────────
+        function resizeCanvas() {
+            const container = document.getElementById('canvasContainer');
+            const rect = container.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvasW = rect.width;
+            canvasH = rect.height;
+            canvas.width = canvasW * dpr;
+            canvas.height = canvasH * dpr;
+            canvas.style.width = canvasW + 'px';
+            canvas.style.height = canvasH + 'px';
+            ctx.scale(dpr, dpr);
+            draw();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvasW, canvasH);
+            drawGrid();
+            drawEdges();
+            drawNodes();
+            drawEdgeCreationHint();
+            drawSelectionHighlight();
+        }
+
+        function drawGrid() {
+            ctx.strokeStyle = '#f0f2f5';
+            ctx.lineWidth = 0.5;
+            for (let x = 0; x < canvasW; x += 30) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvasH);
+                ctx.stroke();
+            }
+            for (let y = 0; y < canvasH; y += 30) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvasW, y);
+                ctx.stroke();
+            }
+        }
+
+        function drawNodes() {
+            for (const node of pda.nodes) {
+                const { x, y } = node;
+                const type = node.type;
+                const shape = getNodeShape(type);
+                const color = getNodeColor(type);
+                const label = node.label || getNodeLabel(type);
+                const size = nodeSize(type);
+                const isSelected = selectedNodeId === node.id;
+                const isHovered = hoveredNodeId === node.id;
+                const isStart = type === 'start';
+                const isAccept = type === 'accept';
+                const isReject = type === 'reject';
+
+                ctx.save();
+                ctx.shadowColor = 'rgba(0,0,0,0.08)';
+                ctx.shadowBlur = 8;
+                ctx.shadowOffsetX = 2;
+                ctx.shadowOffsetY = 2;
+
+                // main fill
+                ctx.fillStyle = color;
+                ctx.strokeStyle = isSelected ? '#1e293b' : (isHovered ? '#334155' : '#475569');
+                ctx.lineWidth = isSelected ? 3 : (isHovered ? 2 : 1.5);
+
+                if (shape === 'diamond') {
+                    const hw = size.w / 2,
+                        hh = size.h / 2;
+                    ctx.beginPath();
+                    ctx.moveTo(x, y - hh);
+                    ctx.lineTo(x + hw, y);
+                    ctx.lineTo(x, y + hh);
+                    ctx.lineTo(x - hw, y);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                } else if (shape === 'roundrect') {
+                    const r = 10;
+                    const w = size.w,
+                        h = size.h;
+                    const rx = x - w / 2,
+                        ry = y - h / 2;
+                    ctx.beginPath();
+                    ctx.moveTo(rx + r, ry);
+                    ctx.arcTo(rx + w, ry, rx + w, ry + h, r);
+                    ctx.arcTo(rx + w, ry + h, rx, ry + h, r);
+                    ctx.arcTo(rx, ry + h, rx, ry, r);
+                    ctx.arcTo(rx, ry, rx + w, ry, r);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                } else {
+                    const w = size.w,
+                        h = size.h;
+                    ctx.fillRect(x - w / 2, y - h / 2, w, h);
+                    ctx.strokeRect(x - w / 2, y - h / 2, w, h);
+                }
+
+                ctx.restore();
+
+                // label
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 12px "Segoe UI", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.shadowColor = 'rgba(0,0,0,0.4)';
+                ctx.shadowBlur = 4;
+                ctx.fillText(label, x, y - 2);
+                ctx.shadowBlur = 0;
+
+                // push symbol
+                if (type === 'push' && node.pushSymbol) {
+                    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+                    ctx.font = '10px monospace';
+                    ctx.textBaseline = 'top';
+                    ctx.fillText('⤷ ' + node.pushSymbol, x + 28, y - 8);
+                }
+
+                // type badge
+                ctx.fillStyle = 'rgba(255,255,255,0.2)';
+                ctx.font = '8px sans-serif';
+                ctx.textBaseline = 'bottom';
+                ctx.textAlign = 'right';
+                ctx.fillText(type.toUpperCase(), x + size.w / 2 - 4, y + size.h / 2 - 4);
+
+                // start arrow
+                if (isStart) {
+                    ctx.fillStyle = '#1e293b';
+                    ctx.font = '18px sans-serif';
+                    ctx.textAlign = 'right';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('▶', x - size.w / 2 - 12, y);
+                }
+                // accept / reject badge
+                if (isAccept) {
+                    ctx.fillStyle = '#16a34a';
+                    ctx.font = '14px sans-serif';
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('✓', x + size.w / 2 + 8, y);
+                }
+                if (isReject) {
+                    ctx.fillStyle = '#dc2626';
+                    ctx.font = '14px sans-serif';
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('✗', x + size.w / 2 + 8, y);
+                }
+            }
+        }
+
+        function drawEdges() {
+
+            for (const edge of pda.edges) {
+
+                const from = getNode(edge.from);
+                const to = getNode(edge.to);
+
+                if (!from || !to) continue;
+
+                const pts = getEdgeConnectionPoints(
+                    from,
+                    to
+                );
+
+                if (!pts) continue;
+
+                const isSelected =
+                    selectedEdgeId === edge.id;
+
+                const isHovered =
+                    hoveredEdgeId === edge.id;
+
+                const dx =
+                    pts.to.x - pts.from.x;
+
+                const dy =
+                    pts.to.y - pts.from.y;
+
+                const len =
+                Math.hypot(dx, dy);
+
+                if (len < 1) continue;
+
+                const ux = dx / len;
+                const uy = dy / len;
+
+                const nx = -uy;
+                const ny = ux;
+
+                const offset =
+                getEdgeOffset(edge);
+
+                const mx =
+                    (pts.from.x + pts.to.x) / 2;
+
+                const my =
+                    (pts.from.y + pts.to.y) / 2;
+
+                const cx =
+                    mx + nx * offset;
+
+                const cy =
+                    my + ny * offset;
+
+                ctx.save();
+
+                ctx.strokeStyle =
+                    isSelected
+                        ? '#1e293b'
+                        : (
+                            isHovered
+                                ? '#334155'
+                                : '#64748b'
+                        );
+
+                ctx.lineWidth =
+                    isSelected
+                        ? 3
+                        : (
+                            isHovered
+                                ? 2.5
+                                : 1.8
+                        );
+
+                ctx.shadowColor =
+                    'rgba(0,0,0,0.06)';
+
+                ctx.shadowBlur = 4;
+
+                ctx.beginPath();
+
+                ctx.moveTo(
+                    pts.from.x,
+                    pts.from.y
+                );
+
+                ctx.quadraticCurveTo(
+                    cx,
+                    cy,
+                    pts.to.x,
+                    pts.to.y
+                );
+
+                ctx.stroke();
+
+                // arrow position
+                const t = 0.93;
+
+                const ax =
+                    (1 - t) * (1 - t) * pts.from.x +
+                        2 * (1 - t) * t * cx +
+                        t * t * pts.to.x;
+
+                const ay =
+                    (1 - t) * (1 - t) * pts.from.y +
+                        2 * (1 - t) * t * cy +
+                        t * t * pts.to.y;
+
+                const tx =
+                    2 * (1 - t) *
+                        (cx - pts.from.x) +
+                        2 * t *
+                            (pts.to.x - cx);
+
+                const ty =
+                    2 * (1 - t) *
+                        (cy - pts.from.y) +
+                        2 * t *
+                            (pts.to.y - cy);
+
+                const tangentLen =
+                Math.hypot(tx, ty);
+
+                const tux =
+                    tx / tangentLen;
+
+                const tuy =
+                    ty / tangentLen;
+
+                const arrowSize = 10;
+
+                ctx.fillStyle =
+                    ctx.strokeStyle;
+
+                ctx.beginPath();
+
+                ctx.moveTo(ax, ay);
+
+                ctx.lineTo(
+                    ax - tux * arrowSize + tuy * 4,
+                    ay - tuy * arrowSize - tux * 4
+                );
+
+                ctx.lineTo(
+                    ax - tux * arrowSize - tuy * 4,
+                    ay - tuy * arrowSize + tux * 4
+                );
+
+                ctx.closePath();
+
+                ctx.fill();
+
+                // label
+                const txt =
+                    edge.symbol || 'λ';
+
+                const tw =
+                    ctx.measureText(txt).width + 14;
+
+                const th = 24;
+
+                ctx.shadowBlur = 0;
+
+                ctx.fillStyle =
+                    'rgba(255,255,255,0.95)';
+
+                ctx.beginPath();
+
+                ctx.roundRect(
+                    cx - tw / 2,
+                    cy - th / 2,
+                    tw,
+                    th,
+                    6
+                );
+
+                ctx.fill();
+
+                ctx.fillStyle =
+                    '#1e293b';
+
+                ctx.font =
+                    'bold 13px "Cascadia Code", monospace';
+
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+
+                ctx.fillText(
+                    txt,
+                    cx,
+                    cy
+                );
+
+                ctx.restore();
+            }
+        }
+
+        function drawEdgeCreationHint() {
+            if (edgeSourceId === null) return;
+            const src = getNode(edgeSourceId);
+            if (!src) return;
+            // draw dashed line from src to mouse
+            // we'll track mouse pos in mousemove
+        }
+
+        function drawSelectionHighlight() {
+            // already handled in drawNodes / drawEdges
+        }
+
+        function getEdgeConnectionPoints(from, to) {
+            const s1 = nodeSize(from.type);
+            const s2 = nodeSize(to.type);
+            const shape1 = getNodeShape(from.type);
+            const shape2 = getNodeShape(to.type);
+
+            const p1 = { x: from.x, y: from.y };
+            const p2 = { x: to.x, y: to.y };
+
+            const pt1 = getBoundaryPoint(p1, p2, shape1, s1);
+            const pt2 = getBoundaryPoint(p2, p1, shape2, s2);
+            if (!pt1 || !pt2) return null;
+            return { from: pt1, to: pt2 };
+        }
+
+        function getBoundaryPoint(center, target, shape, size) {
+            const dx = target.x - center.x;
+            const dy = target.y - center.y;
+            const len = Math.hypot(dx, dy);
+            if (len < 0.001) return { x: center.x, y: center.y };
+
+            const ux = dx / len,
+                uy = dy / len;
+
+            if (shape === 'diamond') {
+                const hw = size.w / 2,
+                    hh = size.h / 2;
+                // intersection with diamond: |x|/hw + |y|/hh = 1
+                // parametric: t such that |center.x + t*dx|/hw + |center.y + t*dy|/hh = 1
+                // approximate by checking t from 0 to 1
+                for (let t = 0.1; t <= 1.0; t += 0.001) {
+                    const px = center.x + t * dx;
+                    const py = center.y + t * dy;
+                    const val = Math.abs(px - center.x) / hw + Math.abs(py - center.y) / hh;
+                    if (val >= 0.98) {
+                        return { x: px, y: py };
+                    }
+                }
+                return { x: center.x + ux * hw * 0.7, y: center.y + uy * hh * 0.7 };
+            } else {
+                const hw = size.w / 2,
+                    hh = size.h / 2;
+                // rectangle intersection
+                const tx = (dx !== 0) ? (hw / Math.abs(dx)) : Infinity;
+                const ty = (dy !== 0) ? (hh / Math.abs(dy)) : Infinity;
+                const t = Math.min(tx, ty) * 0.95;
+                return { x: center.x + dx * t, y: center.y + dy * t };
+            }
+        }
+
+        // roundRect polyfill for canvas
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+                if (r > w / 2) r = w / 2;
+                if (r > h / 2) r = h / 2;
+                this.moveTo(x + r, y);
+                this.arcTo(x + w, y, x + w, y + h, r);
+                this.arcTo(x + w, y + h, x, y + h, r);
+                this.arcTo(x, y + h, x, y, r);
+                this.arcTo(x, y, x + w, y, r);
+                return this;
+            };
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        //  HIT TEST
+        // ─────────────────────────────────────────────────────────────
+        function hitTestNode(mx, my) {
+            for (const node of pda.nodes) {
+                const size = nodeSize(node.type);
+                const shape = getNodeShape(node.type);
+                const hw = size.w / 2,
+                    hh = size.h / 2;
+                if (shape === 'diamond') {
+                    const dx = Math.abs(mx - node.x),
+                        dy = Math.abs(my - node.y);
+                    if (dx / hw + dy / hh <= 1.0) return node.id;
+                } else {
+                    if (mx >= node.x - hw && mx <= node.x + hw &&
+                        my >= node.y - hh && my <= node.y + hh) {
+                        return node.id;
+                    }
+                }
+            }
+            return null;
+        }
+
+        function hitTestEdge(mx, my) {
+
+            const threshold = 12;
+
+            for (const edge of pda.edges) {
+
+                const from = getNode(edge.from);
+                const to = getNode(edge.to);
+
+                if (!from || !to) continue;
+
+                const pts =
+                getEdgeConnectionPoints(from, to);
+
+                if (!pts) continue;
+
+                const dx =
+                    pts.to.x - pts.from.x;
+
+                const dy =
+                    pts.to.y - pts.from.y;
+
+                const len =
+                Math.hypot(dx, dy);
+
+                if (len < 1) continue;
+
+                const ux = dx / len;
+                const uy = dy / len;
+
+                const nx = -uy;
+                const ny = ux;
+
+                const offset =
+                getEdgeOffset(edge);
+
+                const mxCurve =
+                    (pts.from.x + pts.to.x) / 2;
+
+                const myCurve =
+                    (pts.from.y + pts.to.y) / 2;
+
+                const cx =
+                    mxCurve + nx * offset;
+
+                const cy =
+                    myCurve + ny * offset;
+
+                let minDist = Infinity;
+
+                // sample the bezier curve
+                for (let t = 0; t <= 1; t += 0.025) {
+
+                    const x =
+                        (1 - t) * (1 - t) * pts.from.x +
+                            2 * (1 - t) * t * cx +
+                            t * t * pts.to.x;
+
+                    const y =
+                        (1 - t) * (1 - t) * pts.from.y +
+                            2 * (1 - t) * t * cy +
+                            t * t * pts.to.y;
+
+                    const dist =
+                    Math.hypot(mx - x, my - y);
+
+                    if (dist < minDist) {
+                        minDist = dist;
+                    }
+                }
+
+                if (minDist < threshold) {
+                    return edge.id;
+                }
+            }
+
+            return null;
+        }
+
+        function distanceToSegment(px, py, x1, y1, x2, y2) {
+            const dx = x2 - x1,
+                dy = y2 - y1;
+            const len2 = dx * dx + dy * dy;
+            if (len2 === 0) return Math.hypot(px - x1, py - y1);
+            let t = ((px - x1) * dx + (py - y1) * dy) / len2;
+            t = Math.max(0, Math.min(1, t));
+            const cx = x1 + t * dx,
+                cy = y1 + t * dy;
+            return Math.hypot(px - cx, py - cy);
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        //  MOUSE / CANVAS EVENTS
+        // ─────────────────────────────────────────────────────────────
+        let mouseX = 0,
+            mouseY = 0;
+
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvasW / rect.width;
+            const scaleY = canvasH / rect.height;
+            return {
+                x: (e.clientX - rect.left) * scaleX,
+                y: (e.clientY - rect.top) * scaleY
+            };
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            const pos = getMousePos(e);
+            const nodeId = hitTestNode(pos.x, pos.y);
+            const edgeId = hitTestEdge(pos.x, pos.y);
+
+            if (e.button === 0) {
+                // left click
+                if (nodeId !== null) {
+                    if (edgeSourceId !== null) {
+                        // create edge
+                        if (edgeSourceId !== nodeId) {
+                            const exists = pda.edges.some(ed => ed.from === edgeSourceId && ed.to === nodeId);
+                            const symbol = prompt(
+                                'Edge symbol?',
+                                'λ'
+                            );
+                            pda.edges.push({
+                                id: edgeIdCounter++,
+                                from: edgeSourceId,
+                                to: nodeId,
+                                symbol: symbol ? symbol.trim() : 'λ'
+                            });
+                            toast('Edge dibuat');
+                            draw();
+                        }
+                        edgeSourceId = null;
+                        draw();
+                        return;
+                    }
+                    selectedNodeId = nodeId;
+                    selectedEdgeId = null;
+                    dragNodeId = nodeId;
+                    const n = getNode(nodeId);
+                    dragOffsetX = pos.x - n.x;
+                    dragOffsetY = pos.y - n.y;
+                    draw();
+                    updateUI();
+                    return;
+                }
+                if (edgeId !== null) {
+                    selectedEdgeId = edgeId;
+                    selectedNodeId = null;
+                    edgeSourceId = null;
+                    draw();
+                    updateUI();
+                    return;
+                }
+                // click on empty
+                selectedNodeId = null;
+                selectedEdgeId = null;
+                edgeSourceId = null;
+                draw();
+                updateUI();
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            const pos = getMousePos(e);
+            mouseX = pos.x;
+            mouseY = pos.y;
+
+            if (dragNodeId !== null) {
+                const node = getNode(dragNodeId);
+                if (node) {
+                    node.x = Math.max(20, Math.min(canvasW - 20, pos.x - dragOffsetX));
+                    node.y = Math.max(20, Math.min(canvasH - 20, pos.y - dragOffsetY));
+                    draw();
+                }
+                return;
+            }
+
+            // hover
+            const nodeId = hitTestNode(pos.x, pos.y);
+            const edgeId = hitTestEdge(pos.x, pos.y);
+            if (nodeId !== hoveredNodeId || edgeId !== hoveredEdgeId) {
+                hoveredNodeId = nodeId;
+                hoveredEdgeId = edgeId;
+                canvas.style.cursor = (nodeId !== null || edgeId !== null) ? 'pointer' : 'default';
+                draw();
+            }
+
+            // edge creation hint
+            if (edgeSourceId !== null) {
+                // redraw to show hint line
+                draw();
+                ctx.save();
+                const src = getNode(edgeSourceId);
+                if (src) {
+                    ctx.setLineDash([6, 6]);
+                    ctx.strokeStyle = '#4a90e2';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(src.x, src.y);
+                    ctx.lineTo(pos.x, pos.y);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+        });
+
+        canvas.addEventListener('mouseup', (e) => {
+            if (e.button === 0) {
+                dragNodeId = null;
+            }
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            dragNodeId = null;
+            hoveredNodeId = null;
+            hoveredEdgeId = null;
+        });
+
+        canvas.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            const pos = getMousePos(e);
+            const nodeId = hitTestNode(pos.x, pos.y);
+            const edgeId = hitTestEdge(pos.x, pos.y);
+            showContextMenu(e.clientX, e.clientY, nodeId, edgeId);
+        });
+
+        // ─────────────────────────────────────────────────────────────
+        //  CONTEXT MENU
+        // ─────────────────────────────────────────────────────────────
+        function showContextMenu(clientX, clientY, nodeId, edgeId) {
+            const menu = document.getElementById('contextMenu');
+            menu.innerHTML = '';
+            menu.style.display = 'block';
+            menu.style.left = clientX + 'px';
+            menu.style.top = clientY + 'px';
+
+            if (nodeId !== null) {
+                // Node context
+                const node = getNode(nodeId);
+                if (!node) return;
+
+                // Edit label
+                const itemLabel = document.createElement('button');
+                itemLabel.className = 'menu-item';
+                itemLabel.textContent = '✏️ Edit label';
+                itemLabel.onclick = () => {
+                    const newLabel = prompt('Label node:', node.label || '');
+                    if (newLabel !== null) {
+                        node.label = newLabel.trim() || undefined;
+                        draw();
+                        updateUI();
+                        toast('Label diupdate');
+                    }
+                    closeMenu();
+                };
+                menu.appendChild(itemLabel);
+
+                // Edit push symbol (if push)
+                if (node.type === 'push') {
+                    const itemPush = document.createElement('button');
+                    itemPush.className = 'menu-item';
+                    itemPush.textContent = '📦 Edit push symbol (now: ' + (node.pushSymbol || 'λ') + ')';
+                    itemPush.onclick = () => {
+                        const val = prompt('Symbol yang di-push:', node.pushSymbol || 'a');
+                        if (val !== null) {
+                            node.pushSymbol = val.trim() || 'λ';
+                            draw();
+                            updateUI();
+                            toast('Push symbol diupdate');
+                        }
+                        closeMenu();
+                    };
+                    menu.appendChild(itemPush);
+                }
+
+                // Add edge from this node
+                const itemEdge = document.createElement('button');
+                itemEdge.className = 'menu-item';
+                itemEdge.textContent = '🔗 Tambah edge dari sini';
+                itemEdge.onclick = () => {
+                    edgeSourceId = nodeId;
+                    selectedNodeId = nodeId;
+                    selectedEdgeId = null;
+                    draw();
+                    toast('Klik node tujuan');
+                    closeMenu();
+                };
+                menu.appendChild(itemEdge);
+
+                // Delete
+                const itemDel = document.createElement('button');
+                itemDel.className = 'menu-item danger';
+                itemDel.textContent = '🗑️ Hapus node';
+                itemDel.onclick = () => {
+                    if (confirm('Hapus node "' + (node.label || node.type) + '" dan edge terkait?')) {
+                        pda.nodes = pda.nodes.filter(n => n.id !== nodeId);
+                        pda.edges = pda.edges.filter(e => e.from !== nodeId && e.to !== nodeId);
+                        if (selectedNodeId === nodeId) selectedNodeId = null;
+                        if (edgeSourceId === nodeId) edgeSourceId = null;
+                        draw();
+                        updateUI();
+                        toast('Node dihapus');
+                    }
+                    closeMenu();
+                };
+                menu.appendChild(itemDel);
+
+            } else if (edgeId !== null) {
+                // Edge context
+                const edge = getEdge(edgeId);
+                if (!edge) return;
+
+                const itemSym = document.createElement('button');
+                itemSym.className = 'menu-item';
+                itemSym.textContent = '✏️ Edit symbol (now: ' + (edge.symbol || 'λ') + ')';
+                itemSym.onclick = () => {
+                    const val = prompt('Symbol edge:', edge.symbol || 'λ');
+                    if (val !== null) {
+                        edge.symbol = val.trim() || 'λ';
+                        draw();
+                        updateUI();
+                        toast('Symbol diupdate');
+                    }
+                    closeMenu();
+                };
+                menu.appendChild(itemSym);
+
+                const itemDel = document.createElement('button');
+                itemDel.className = 'menu-item danger';
+                itemDel.textContent = '🗑️ Hapus edge';
+                itemDel.onclick = () => {
+                    pda.edges = pda.edges.filter(e => e.id !== edgeId);
+                    if (selectedEdgeId === edgeId) selectedEdgeId = null;
+                    draw();
+                    updateUI();
+                    toast('Edge dihapus');
+                    closeMenu();
+                };
+                menu.appendChild(itemDel);
+
+            } else {
+                // Empty space
+                for (const t of NODE_TYPES) {
+                    const btn = document.createElement('button');
+                    btn.className = 'menu-item';
+                    const label = t.charAt(0).toUpperCase() + t.slice(1);
+                    const color = NODE_COLORS[t] || '#888';
+                    btn.innerHTML = `<span class="badge" style="background:${color}"></span> Tambah ${label}`;
+                    btn.onclick = () => {
+                        const pos = getMousePosFromEvent();
+                        const id = nodeIdCounter++;
+                        const newNode = {
+                            id,
+                            type: t,
+                            x: pos.x || 200,
+                            y: pos.y || 200,
+                            label: getNodeLabel(t),
+                        };
+                        if (t === 'push') newNode.pushSymbol = 'a';
+                        pda.nodes.push(newNode);
+                        draw();
+                        updateUI();
+                        toast('Node ' + label + ' ditambahkan');
+                        closeMenu();
+                    };
+                    menu.appendChild(btn);
+                }
+
+                // divider
+                const div = document.createElement('div');
+                div.className = 'menu-divider';
+                menu.appendChild(div);
+
+                const itemClear = document.createElement('button');
+                itemClear.className = 'menu-item danger';
+                itemClear.textContent = '🧹 Hapus semua';
+                itemClear.onclick = () => {
+                    if (confirm('Hapus semua node dan edge?')) {
+                        pda.nodes = [];
+                        pda.edges = [];
+                        selectedNodeId = null;
+                        selectedEdgeId = null;
+                        edgeSourceId = null;
+                        draw();
+                        updateUI();
+                        toast('Semua dihapus');
+                    }
+                    closeMenu();
+                };
+                menu.appendChild(itemClear);
+            }
+
+            // Ensure menu stays in viewport
+            const rect = menu.getBoundingClientRect();
+            if (rect.right > window.innerWidth) {
+                menu.style.left = (window.innerWidth - rect.width - 10) + 'px';
+            }
+            if (rect.bottom > window.innerHeight) {
+                menu.style.top = (window.innerHeight - rect.height - 10) + 'px';
+            }
+        }
+
+        function getMousePosFromEvent() {
+            // use last known mouse pos
+            return { x: mouseX || 200, y: mouseY || 200 };
+        }
+
+        function closeMenu() {
+            document.getElementById('contextMenu').style.display = 'none';
+        }
+        document.addEventListener('click', closeMenu);
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
+
+        // ─────────────────────────────────────────────────────────────
+        //  EXECUTION ENGINE
+        // ─────────────────────────────────────────────────────────────
+        function runPDA(inputStr) {
+            const startNode = pda.nodes.find(n => n.type === 'start');
+            if (!startNode) {
+                toast('Tidak ada node START!');
+                return { steps: [], result: 'error', reason: 'No start node' };
+            }
+
+            const steps = [];
+            const stack = ['λ'];
+            let currentId = startNode.id;
+            let inputPos = 0;
+            const input = inputStr.split('');
+            let result = null;
+            let reason = '';
+            let maxSteps = 500;
+            let stepCount = 0;
+
+            // Find accept/reject nodes
+            const acceptNodes = pda.nodes.filter(n => n.type === 'accept');
+            const rejectNodes = pda.nodes.filter(n => n.type === 'reject');
+
+            while (stepCount < maxSteps) {
+                stepCount++;
+                const node = getNode(currentId);
+                if (!node) {
+                    result = 'reject';
+                    reason = 'Node tidak ditemukan';
+                    break;
+                }
+
+                // Check if accept/reject
+                if (node.type === 'accept') {
+                    result = 'accept';
+                    reason = 'Mencapai ACCEPT';
+                    steps.push({
+                        nodeId: currentId,
+                        stack: [...stack],
+                        inputPos,
+                        operation: 'accept',
+                        description: '✅ ACCEPT'
+                    });
+                    break;
+                }
+                if (node.type === 'reject') {
+                    result = 'reject';
+                    reason = 'Mencapai REJECT';
+                    steps.push({
+                        nodeId: currentId,
+                        stack: [...stack],
+                        inputPos,
+                        operation: 'reject',
+                        description: '❌ REJECT'
+                    });
+                    break;
+                }
+
+                // Find outgoing edges
+                const outgoing = pda.edges.filter(e => e.from === currentId);
+                if (outgoing.length === 0) {
+                    result = 'reject';
+                    reason = 'Tidak ada edge keluar dari ' + (node.label || node.type);
+                    steps.push({
+                        nodeId: currentId,
+                        stack: [...stack],
+                        inputPos,
+                        operation: 'error',
+                        description: '❌ Dead end'
+                    });
+                    break;
+                }
+
+                let matched = false;
+                let nextId = null;
+                let opDesc = '';
+
+                // Try each edge
+                for (const edge of outgoing) {
+                    const target = getNode(edge.to);
+                    if (!target) continue;
+                    const sym = edge.symbol || 'λ';
+
+                    if (node.type === 'read') {
+                        // Read: consume input char
+                        if (inputPos < input.length) {
+                            const ch = input[inputPos];
+                            if (sym === ch || sym === 'λ') {
+                                // match
+                                const consumed = sym === 'λ' ? '' : ch;
+                                nextId = edge.to;
+                                matched = true;
+                                opDesc = `Read "${consumed || 'λ'}" → go to ${target.label || target.type}`;
+                                if (sym !== 'λ') inputPos++;
+                                steps.push({
+                                    nodeId: currentId,
+                                    stack: [...stack],
+                                    inputPos,
+                                    operation: 'read',
+                                    description: opDesc,
+                                    edgeSymbol: sym,
+                                    consumed: sym === 'λ' ? 'λ' : ch
+                                });
+                                break;
+                            }
+                        } else {
+                            // no input left, try λ edge
+                            if (sym === 'λ') {
+                                nextId = edge.to;
+                                matched = true;
+                                opDesc = `Read λ (no input) → go to ${target.label || target.type}`;
+                                steps.push({
+                                    nodeId: currentId,
+                                    stack: [...stack],
+                                    inputPos,
+                                    operation: 'read',
+                                    description: opDesc,
+                                    edgeSymbol: 'λ'
+                                });
+                                break;
+                            }
+                        }
+                    } else if (node.type === 'push') {
+                        // Push: push symbol to stack
+                        const pushSym = node.pushSymbol || 'a';
+                        if (pushSym !== 'λ') {
+                            stack.push(pushSym);
+                        }
+                        nextId = edge.to;
+                        matched = true;
+                        opDesc = `Push "${pushSym}" → go to ${target.label || target.type}`;
+                        steps.push({
+                            nodeId: currentId,
+                            stack: [...stack],
+                            inputPos,
+                            operation: 'push',
+                            description: opDesc,
+                            pushSymbol: pushSym
+                        });
+                        break;
+                    } else if (node.type === 'pop') {
+                        // Pop: pop from stack if top matches edge symbol
+                        const top = stack[stack.length - 1] || 'λ';
+                        if (sym === top || (sym === 'λ' && top !== 'λ')) {
+                            const popped = stack.pop();
+                            nextId = edge.to;
+                            matched = true;
+                            opDesc = `Pop "${popped}" (matched "${sym}") → go to ${target.label || target.type}`;
+                            steps.push({
+                                nodeId: currentId,
+                                stack: [...stack],
+                                inputPos,
+                                operation: 'pop',
+                                description: opDesc,
+                                popSymbol: popped
+                            });
+                            break;
+                        }
+                        // try next edge
+                    } else if (node.type === 'start') {
+                        // Start: just follow edge
+                        nextId = edge.to;
+                        matched = true;
+                        opDesc = `Start → go to ${target.label || target.type}`;
+                        steps.push({
+                            nodeId: currentId,
+                            stack: [...stack],
+                            inputPos,
+                            operation: 'start',
+                            description: opDesc,
+                            edgeSymbol: sym
+                        });
+                        break;
+                    }
+                }
+
+                if (!matched) {
+                    result = 'reject';
+                    reason = 'Tidak ada transisi yang cocok di ' + (node.label || node.type);
+                    steps.push({
+                        nodeId: currentId,
+                        stack: [...stack],
+                        inputPos,
+                        operation: 'error',
+                        description: '❌ No matching transition'
+                    });
+                    break;
+                }
+
+                currentId = nextId;
+                if (currentId === undefined || currentId === null) {
+                    result = 'reject';
+                    reason = 'Transisi ke node invalid';
+                    break;
+                }
+            }
+
+            if (result === null) {
+                result = 'reject';
+                reason = 'Maksimum step tercapai';
+            }
+
+            // If no accept/reject reached but input consumed and stack empty, accept
+            if (result === null && inputPos >= input.length && stack.length === 1 && stack[0] === 'λ') {
+                result = 'accept';
+                reason = 'Input habis dan stack kosong';
+                steps.push({
+                    nodeId: currentId,
+                    stack: [...stack],
+                    inputPos,
+                    operation: 'accept',
+                    description: '✅ ACCEPT (stack empty)'
+                });
+            }
+
+            // If no result yet, reject
+            if (result === null) {
+                result = 'reject';
+                reason = 'Tidak mencapai accept';
+                steps.push({
+                    nodeId: currentId,
+                    stack: [...stack],
+                    inputPos,
+                    operation: 'reject',
+                    description: '❌ REJECT'
+                });
+            }
+
+            return { steps, result, reason };
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        //  UI UPDATES
+        // ─────────────────────────────────────────────────────────────
+        function updateUI() {
+            // update result display
+            const resultText = document.getElementById('resultText');
+            if (execResult === 'accept') {
+                resultText.textContent = '✅ ACCEPTED';
+                resultText.className = 'accept';
+            } else if (execResult === 'reject') {
+                resultText.textContent = '❌ REJECTED';
+                resultText.className = 'reject';
+            } else {
+                resultText.textContent = 'Belum dicek';
+                resultText.className = '';
+            }
+
+            // update stack view
+            const stackView = document.getElementById('stackView');
+            if (execSteps.length > 0 && execStepIndex >= 0 && execStepIndex < execSteps.length) {
+                const step = execSteps[execStepIndex];
+                const st = step.stack || ['λ'];
+                stackView.innerHTML = '';
+                // show from bottom to top (reverse)
+                const displayStack = [...st];
+                for (let i = displayStack.length - 1; i >= 0; i--) {
+                    const el = document.createElement('div');
+                    el.className = 'stack-item';
+                    if (i === 0 && displayStack[i] === 'λ') el.classList.add('bottom');
+                    if (step.operation === 'pop' && i === displayStack.length - 1) el.classList.add('pop');
+                    if (step.operation === 'push' && i === displayStack.length - 1) el.classList.add('push');
+                    el.textContent = displayStack[i] || 'λ';
+                    stackView.appendChild(el);
+                }
+                if (displayStack.length === 0) {
+                    const el = document.createElement('div');
+                    el.className = 'stack-item bottom';
+                    el.textContent = 'λ (empty)';
+                    stackView.appendChild(el);
+                }
+            } else {
+                stackView.innerHTML = '<div class="stack-item bottom">λ (bottom)</div>';
+            }
+
+            // step indicator
+            document.getElementById('stepIndicator').textContent =
+                execSteps.length > 0 ? `${execStepIndex + 1} / ${execSteps.length}` : '0 / 0';
+            document.getElementById('stepBackBtn').disabled = execStepIndex <= 0;
+            document.getElementById('stepForwardBtn').disabled = execStepIndex >= execSteps.length - 1;
+
+            // log
+            const log = document.getElementById('execLog');
+            if (execSteps.length > 0) {
+                log.innerHTML = execSteps.map((s, i) => {
+                    const cls = i === execStepIndex ? 'log-entry current' : 'log-entry';
+                    const op = s.operation || '—';
+                    const desc = s.description || '';
+                    return `<div class="${cls}">[${i + 1}] ${op.toUpperCase()} ${desc}</div>`;
+                }).join('');
+                if (execStepIndex >= 0) {
+                    const items = log.querySelectorAll('.log-entry');
+                    if (items[execStepIndex]) items[execStepIndex].scrollIntoView({ block: 'nearest' });
+                }
+            } else {
+                log.innerHTML = 'Belum ada eksekusi.';
+            }
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        //  RUN / RESET / STEP
+        // ─────────────────────────────────────────────────────────────
+        function runExecution() {
+            const input = document.getElementById('inputString').value.trim();
+            if (!input) {
+                toast('Masukkan string input!');
+                return;
+            }
+
+            const result = runPDA(input);
+            execSteps = result.steps;
+            execStepIndex = execSteps.length > 0 ? 0 : -1;
+            execResult = result.result;
+
+            if (execSteps.length > 0) {
+                // highlight current node
+                draw();
+                // highlight current node in canvas
+                const first = execSteps[0];
+                if (first) {
+                    highlightNode(first.nodeId);
+                }
+            }
+
+            updateUI();
+            draw();
+            toast('Eksekusi selesai: ' + (execResult === 'accept' ? '✅ ACCEPT' : '❌ REJECT'));
+        }
+
+        function highlightNode(nodeId) {
+            // just redraw with selection
+            selectedNodeId = nodeId;
+            draw();
+        }
+
+        function stepForward() {
+            if (execStepIndex < execSteps.length - 1) {
+                execStepIndex++;
+                const step = execSteps[execStepIndex];
+                if (step) highlightNode(step.nodeId);
+                updateUI();
+                draw();
+            }
+        }
+
+        function stepBack() {
+            if (execStepIndex > 0) {
+                execStepIndex--;
+                const step = execSteps[execStepIndex];
+                if (step) highlightNode(step.nodeId);
+                updateUI();
+                draw();
+            }
+        }
+
+        function resetExecution() {
+            execSteps = [];
+            execStepIndex = -1;
+            execResult = null;
+            selectedNodeId = null;
+            selectedEdgeId = null;
+            edgeSourceId = null;
+            updateUI();
+            draw();
+            toast('Reset');
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        //  PRESETS
+        // ─────────────────────────────────────────────────────────────
+        function loadPreset(name) {
+            let data;
+            nodeIdCounter = 0;
+            edgeIdCounter = 0;
+            switch (name) {
+                case 'anbn':
+                    data = createDefaultPDA();
+                    break;
+                case 'anbn_star':
+                    data = createStarPDA();
+                    break;
+                case 'aabn':
+                    data = createAabnPDA();
+                    break;
+                case 'empty':
+                default:
+                    data = createEmptyPDA();
+                    break;
+            }
+            pda.nodes = data.nodes;
+            pda.edges = data.edges;
+            selectedNodeId = null;
+            selectedEdgeId = null;
+            edgeSourceId = null;
+            resetExecution();
+            draw();
+            updateUI();
+            toast('Preset dimuat: ' + name);
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        //  JSON EDITOR
+        // ─────────────────────────────────────────────────────────────
+        function syncJSONToPDA() {
+            try {
+                const data = JSON.parse(document.getElementById('jsonEditor').value);
+                if (data.nodes && data.edges) {
+                    pda.nodes = data.nodes;
+                    pda.edges = data.edges;
+                    // update counters
+                    for (const n of pda.nodes) nodeIdCounter = Math.max(nodeIdCounter, n.id + 1);
+                    for (const e of pda.edges) edgeIdCounter = Math.max(edgeIdCounter, e.id + 1);
+                    resetExecution();
+                    draw();
+                    updateUI();
+                    toast('JSON dimuat');
+                } else {
+                    toast('JSON harus memiliki nodes dan edges');
+                }
+            } catch (e) {
+                toast('JSON tidak valid: ' + e.message);
+            }
+        }
+
+        function updateJSONEditor() {
+            const data = { nodes: pda.nodes, edges: pda.edges };
+            document.getElementById('jsonEditor').value = JSON.stringify(data, null, 2);
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        //  TABS
+        // ─────────────────────────────────────────────────────────────
+        function switchTab(tab) {
+            const canvasContainer = document.getElementById('canvasContainer');
+            const jsonContainer = document.getElementById('jsonContainer');
+            const tabs = document.querySelectorAll('#tabBar button');
+            tabs.forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+            if (tab === 'visual') {
+                canvasContainer.style.display = 'block';
+                jsonContainer.style.display = 'none';
+                setTimeout(resizeCanvas, 50);
+            } else {
+                canvasContainer.style.display = 'none';
+                jsonContainer.style.display = 'flex';
+                updateJSONEditor();
+            }
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        //  INIT
+        // ─────────────────────────────────────────────────────────────
+        function init() {
+            // load default preset
+            loadPreset('anbn');
+
+            // resize
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            // tabs
+            document.querySelectorAll('#tabBar button').forEach(btn => {
+                btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+            });
+
+            // run button
+            document.getElementById('runBtn').addEventListener('click', runExecution);
+
+            // reset button
+            document.getElementById('resetBtn').addEventListener('click', resetExecution);
+
+            // step buttons
+            document.getElementById('stepForwardBtn').addEventListener('click', stepForward);
+            document.getElementById('stepBackBtn').addEventListener('click', stepBack);
+            document.getElementById('stepResetBtn').addEventListener('click', resetExecution);
+
+            // preset
+            document.getElementById('presetSelect').addEventListener('change', (e) => {
+                loadPreset(e.target.value);
+            });
+
+            // JSON editor: apply on blur or Ctrl+S
+            document.getElementById('jsonEditor').addEventListener('blur', syncJSONToPDA);
+            document.getElementById('jsonEditor').addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                    e.preventDefault();
+                    syncJSONToPDA();
+                }
+            });
+
+            // enter key on input
+            document.getElementById('inputString').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') runExecution();
+            });
+
+            // update UI
+            updateUI();
+
+            // close context menu on scroll
+            document.addEventListener('scroll', closeMenu);
+
+            // extra: double click to edit node label
+            canvas.addEventListener('dblclick', (e) => {
+                const pos = getMousePos(e);
+                const nodeId = hitTestNode(pos.x, pos.y);
+                if (nodeId !== null) {
+                    const node = getNode(nodeId);
+                    if (node) {
+                        const newLabel = prompt('Edit label:', node.label || '');
+                        if (newLabel !== null) {
+                            node.label = newLabel.trim() || undefined;
+                            draw();
+                            updateUI();
+                            toast('Label diupdate');
+                        }
+                    }
+                }
+            });
+
+            // backspace keybind
+            document.addEventListener('keydown', (e) => {
+
+                if (e.key !== 'Backspace' && e.key !== 'Delete') {
+                    return;
+                }
+
+                // don't delete while typing
+                const tag = document.activeElement.tagName;
+
+                if (
+                    tag === 'INPUT' ||
+                        tag === 'TEXTAREA' ||
+                        document.activeElement.isContentEditable
+                ) {
+                    return;
+                }
+
+                e.preventDefault();
+
+                // delete selected node
+                if (selectedNodeId !== null) {
+
+                    pda.nodes = pda.nodes.filter(
+                        n => n.id !== selectedNodeId
+                    );
+
+                    pda.edges = pda.edges.filter(
+                        e =>
+                            e.from !== selectedNodeId &&
+                                e.to !== selectedNodeId
+                    );
+
+                    toast('Node dihapus');
+
+                    selectedNodeId = null;
+                    selectedEdgeId = null;
+
+                    updateUI();
+                    draw();
+
+                    return;
+                }
+
+                // delete selected edge
+                if (selectedEdgeId !== null) {
+
+                    pda.edges = pda.edges.filter(
+                        e => e.id !== selectedEdgeId
+                    );
+
+                    toast('Edge dihapus');
+
+                    selectedEdgeId = null;
+
+                    updateUI();
+                    draw();
+                }
+            });
+
+            console.log('PDA Visualizer ready!');
+        }
+
+        // run on load
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
