@@ -8,9 +8,10 @@
 ## Website Link
 
 ## Cara Penggunaan Program
+- Pilih bahasa (a^n b^n atau aab^2)
 - Masukkan input string
-- Klik tombol "Check String"
-- Input result dan history akan muncul
+- Klik tombol "Jalankan"
+- Output hasil (accepted/rejected), proses (log and stack step by step), dan visual PDA
 
 ## Proses
 ### Input
