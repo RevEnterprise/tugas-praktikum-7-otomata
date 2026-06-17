@@ -6,7 +6,7 @@
 | Raden Kurniawan Agung Fitrianto | 5025241104 | B |
 
 ## Website Link
-[Website Link]https://reventerprise.github.io/tugas-praktikum-7-otomata/
+[Website Link](https://reventerprise.github.io/tugas-praktikum-7-otomata/)
 
 
 ## Cara Penggunaan Program
